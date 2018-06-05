@@ -1,6 +1,6 @@
 #include "speeds.h"
 
-//names must be 
+//names must be 2 characters
 void init_speed(speed* s, char front, char back, char* name){
     s->front = front;
     s->back = back;
@@ -10,7 +10,7 @@ void init_speed(speed* s, char front, char back, char* name){
 }
 
 //initialize speeds in an order based on gear ratio
-void init_speeds(){
+__attribute__((constructor)) void init_speeds(){
 /*[[[cog
 def speedname(i):
     out = str(i)
