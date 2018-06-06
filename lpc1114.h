@@ -34,8 +34,18 @@ extern struct{
     pio_t PIO2_8;
     pio_t PIO2_1;
     pio_t PIO0_3;
-    pio_t PIO0_4;
-    pio_t PIO0_5;
+    struct {
+      volatile unsigned FUNC: 3;
+      volatile unsigned     : 5;
+      volatile unsigned I2CMODE : 2;
+      volatile unsigned     : 22;
+    } PIO0_4;
+    struct {
+      volatile unsigned FUNC: 3;
+      volatile unsigned     : 5;
+      volatile unsigned I2CMODE : 2;
+      volatile unsigned     : 22;
+    } PIO0_5;
     pio_t PIO1_9;
     pio_t PIO3_4;
     pio_t PIO2_4;
@@ -86,7 +96,13 @@ extern struct{
 
 extern struct {
     VU SYSMEMREMAP;
-    VU PRESETCTRL;
+    struct {
+      volatile unsigned SSP0_RST_N: 1;
+      volatile unsigned I2C_RST_N: 1;
+      volatile unsigned SSP1_RST_N: 1;
+      volatile unsigned CAN_RST_N: 1;
+      volatile unsigned  : 28;
+    } PRESETCTRL;
     VU SYSPLLCTRL;
     RES SYSPLLSTAT;
     RES __RESERVED_0[4];
@@ -124,7 +140,7 @@ extern struct {
         VU CAN : 1;
         VU SSP1 : 1;
         RES : 13;
-        
+
     }  SYSAHBCLKCTRL;
     RES __RESERVED_5[4];
     VU SSP0CLKDIV;
@@ -258,7 +274,7 @@ struct {
         VU PWMEN2 : 1;
         VU PWMEN3 : 1;
         RES : 28;
-    } PWMC; 
+    } PWMC;
 } extern TMR16B0, TMR16B1;
 
 typedef struct {
@@ -349,3 +365,22 @@ struct {
     VU MIS;
     VU IC;
 } extern GPIO0, GPIO1;
+
+extern struct {
+  volatile       unsigned CONSET;
+  volatile       unsigned STAT;
+  volatile       unsigned DAT;
+  volatile       unsigned ADR0;
+  volatile       unsigned SCLH;
+  volatile       unsigned SCLL;
+  volatile       unsigned CONCLR;
+  volatile       unsigned MMCTRL;
+  volatile       unsigned ADR1;
+  volatile       unsigned ADR2;
+  volatile       unsigned ADR3;
+  volatile       unsigned DATA_BUFFER;
+  volatile       unsigned MASK0;
+  volatile       unsigned MASK1;
+  volatile       unsigned MASK2;
+  volatile       unsigned MASK3;
+} I2C0;
