@@ -18,8 +18,10 @@ blinky: irq.o blinky.o thread.o libos.a
 	ld-arm -o blinky -T lpc1114.ld blinky.o thread.o irq.o libos.a
 ssd1306.o:
 	gcc-arm -mcpu=Cortex-m0 -c -g ssd1306.c
-lcd: irq.o ssd1306.o thread.o libos.a
-	ld-arm -o lcd -T lpc1114.ld ssd1306.o thread.o irq.o libos.a
+font.o:
+	gcc-arm -mcpu=Cortex-m0 -c -g font.c
+lcd: irq.o ssd1306.o thread.o libos.a font.o
+	ld-arm -o lcd -T lpc1114.ld ssd1306.o thread.o irq.o libos.a font.o
 upload: lcd
 	openocd -f interface/stlink-v2.cfg -f target/lpc11xx.cfg -c'program lcd verify reset exit'
 debug:

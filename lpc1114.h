@@ -367,6 +367,39 @@ struct {
 } extern GPIO0, GPIO1;
 
 extern struct {
+  VU IR;
+  VU TCR;
+  VU TC;
+  VU PR;
+  VU PC;
+  struct {
+    VU MR0I : 1;
+    VU MR0R : 1;
+    VU MR0S : 1;
+    VU MR1I : 1;
+    VU MR1R : 1;
+    VU MR1S : 1;
+    VU MR2I : 1;
+    VU MR2R : 1;
+    VU MR2S : 1;
+    VU MR3I : 1;
+    VU MR3R : 1;
+    VU MR3S : 1;
+    RES : 20;
+  } MCR;
+  VU MR0;
+  VU MR1;
+  VU MR2;
+  VU MR3;
+  VU CCR;
+  VU CR0;
+  VU EMR;
+  RES __RESERVED_0[12];
+  VU CTCR;
+  VU PWMC;
+} TMR32B0, TMR32B1;
+
+extern struct {
   volatile       unsigned CONSET;
   volatile       unsigned STAT;
   volatile       unsigned DAT;
