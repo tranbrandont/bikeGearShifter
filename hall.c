@@ -1,11 +1,12 @@
 #include "lpc1114.h"
+#include "hall.h"
 
 //if you ride this bike for like 1.5 straight years
 //have the gears change unexpectedly or something
-uint32_t centisec_timer = 0;
+unsigned centisec_timer = 0;
 
 //timestamps of the last 12 times we found a new magnet
-uint32_t[12] history;
+unsigned history[12];
 char currsample = 0;
 
 const int ADC_LOW_THRESH = 200;
@@ -15,13 +16,13 @@ const int SHIFT_DOWN_THRESH = 75;
 const int SHIFT_UP_THRESH = 150;
 
 enum State{
-    HI;
-    LO;
+    HI,
+    LO
 };
-State state = HI;
+unsigned state = HI;
 
 
-void setup(){
+void hallsetup(){
   //set up systick
   SYST.CSR.CLKSOURCE = 1;
   SYST.RVR.RELOAD = 479999; //interrupts every 10ms
@@ -31,6 +32,7 @@ void setup(){
 
   //set up AD0
   SYSCON.SYSAHBCLKCTRL.ADC = 1;
+  SYSCON.PDRUNCFG.ADC_PD = 0;
   SYSCON.SYSAHBCLKCTRL.IOCON  = 1;
   IOCON.R_PIO0_11.FUNC = 2;
   IOCON.R_PIO0_11.ADMODE = 0;
@@ -52,12 +54,15 @@ void handlesample(){
     if (result > ADC_HI_THRESH){
         state = HI;
     }
-    else if (result < ADC_LO_THRESH && state != LO){
+    else if (result < ADC_LOW_THRESH && state != LO){
         state = LO;
-        currsample = (currsample + 1) % 12;
+        currsample = (currsample + 1);
+        if (currsample == 12)
+          currsample = 0;
         history[currsample] = centisec_timer;
-        char oldest = (currsample == 11)? (0) : (currsample + 1);
-        if (centisec_timer < oldest){
+        char oldestindex = (currsample == 11)? (0) : (currsample + 1);
+        unsigned oldest = history[oldestindex];
+        if (centisec_timer < oldest || oldest == 0){
             //either we've overflowed (Tour de entire width of France?!) or we
             //haven't gotten 12 samples yet. Don't shift yet
             return;
@@ -67,7 +72,10 @@ void handlesample(){
             for (int i = 0; i < 12; i++){
                 history[i] = 0;
             }
-            //TODO: shift up
+            displayText("Step back");
+
+            stepBack();
+            currsample = 0;
             return;
         }
         if  (centisec_timer - oldest < SHIFT_DOWN_THRESH){
@@ -75,7 +83,11 @@ void handlesample(){
             for (int i = 0; i < 12; i++){
                 history[i] = 0;
             }
-            //TODO: shift down
+            displayText("Step up");
+
+            stepUp();
+            currsample = 0;
+
             return;
         }
     }
@@ -87,6 +99,6 @@ void SysTick(){
 }
 
 void IRQ24(){
+
     handlesample();
 }
-

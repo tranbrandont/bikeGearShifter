@@ -13,6 +13,8 @@ int currMotor = 7;
 
 void clearScreen();
 void displayText();
+void hallsetup();
+void servosetup();
 
 void setup () {
 
@@ -34,12 +36,18 @@ void setup () {
   I2C0.SCLL = 240;
   I2C0.CONSET = I2EN;
 
-  ISER |= (1<<15) | (1<<17);
+  ISER |= (1<<15) | (1<<17) | (1<<24) | (1<<30);
 
   I2C0.CONSET = STA;
 
+//read the switch on GPIO1_6,make it an input pin.
   GPIO1.DIR &= ~(1 << 6);
-  GPIO1.IS |= (1<<6);
+  GPIO1.IE = 1<<6;
+
+  //GPIO1.IS &= ~(1<<6);
+  //GPIO1.IBE |= (1<<6);
+  //GPIO1.IEV &= ~(1<<6);
+  IOCON.PIO0_6.MODE = 0x2;
 
 
 //make PIO0 1, 2, 3, and 7 output
@@ -69,62 +77,86 @@ void setup () {
   for(int i = 0; i< 1000000; i++){}
   displayText("test");
 
-  for(int i = 0; i < 200000; i++) {
-    stepUp();
-    stepBack();
-    for(int i = 0; i < 200000; i++) {}
-  }
+  hallsetup();
+  servosetup();
+
+  // for(int i = 0; i < 200000; i++) {
+  //   stepUp();
+  //   stepBack();
+  //   for(int i = 0; i < 200000; i++) {}
+  // }
 }
 
 void IRQ17() {
+  TMR16B1.MR0 = TMR16B1.MR3 - (1000);
+}
 
+void IRQ30() {
+  GPIO0.DATA[1<<1] = 1<<1;
+
+}
+
+void servosetup() {
+  SYSCON.SYSAHBCLKCTRL.CT16B1 = 1;
+  SYSCON.SYSAHBCLKCTRL.IOCON  = 1;
+  IOCON.PIO1_9.FUNC = 1;
+  SYSCON.SYSAHBCLKCTRL.IOCON = 0;
+
+  TMR16B1.PR          = 48;
+  TMR16B1.MR3         = 20000;
+  TMR16B1.MR0         = 18500;
+  TMR16B1.MR1         = 20000;
+  TMR16B1.MCR.MR1I    = 1;
+
+  TMR16B1.MCR.MR3R    = 1;
+  TMR16B1.PWMC.PWMEN0 = 1;
+
+  TMR16B1.TC      = 0;
+  TMR16B1.PC      = 0;
+
+  TMR16B1.TCR.CEn = 1;
 }
 
 //steps the motor A-> B -> !A -> !B
 void stepUp() {
   for(int i = 0; i < 200; i++) {
-    GPIO0.DATA[1<<currMotor] = 0;
-    if (currMotor == 7) {
-      currMotor = 1;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
+
+    switch (currMotor) {
+      case 1: currMotor = 3;
+        break;
+      case 2: currMotor = 7;
+        break;
+      case 3: currMotor = 2;
+        break;
+      case 7: currMotor = 1;
+        break;
     }
-    else if (currMotor == 1) {
-      currMotor = 3;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
-    else if (currMotor == 3) {
-      currMotor = 2;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
-    else if (currMotor == 2) {
-      currMotor = 7;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
+    GPIO0.DATA[1<<currMotor] = 1<<currMotor;
     for(int i = 0; i < 100000; i++) {}
+    GPIO0.DATA[1<<currMotor] = 0;
+    GPIO0.DATA[1<<currMotor] = 0;
   }
 }
 
 //steps A!-> B -> A -> B!
 void stepBack() {
+
+
   for(int i = 0; i < 200; i++) {
+    switch (currMotor) {
+      case 1: currMotor = 7;
+        break;
+      case 2: currMotor = 3;
+        break;
+      case 3: currMotor = 1;
+        break;
+      case 7: currMotor = 2;
+        break;
+    }
+    GPIO0.DATA[1<<currMotor] = 1<<currMotor;
+    for(int i = 0; i < 100000; i++) {}
     GPIO0.DATA[1<<currMotor] = 0;
-    if (currMotor == 7) {
-      currMotor = 2;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
-    else if (currMotor == 2) {
-      currMotor = 3;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
-    else if (currMotor == 3) {
-      currMotor = 1;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
-    else if (currMotor == 1) {
-      currMotor = 7;
-      GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    }
-    for(int i = 0; i < 500000; i++) {}
+
   }
 }
 
@@ -174,7 +206,7 @@ unsigned char buffer[] = {0x78,                   /* Device address    */
                          0x80, 0xC8,             /* Scan Direction    */
 
 
-                         0x80, 0xDA, 0x80, 0x02, /* Hardware COM Pins */
+                         0x80, 0xDA, 0x80, 0x12, /* Hardware COM Pins */
                          0x80, 0x81, 0x80, 0x7F, /* Contrast          */
                          0x80, 0xA4,             /* Display ON        */
                          0x80, 0xA6,             /* Normal (A7 invert)*/
@@ -223,7 +255,7 @@ unsigned char writing[] = {
 int i = 0;
 int j = 0;
 void displayText(char* text) {
-  int m = 128;
+  int m = 256;
   //reset i only if not in header
   if((!i < (sizeof(buffer)/sizeof(buffer[0])))) {
     i = 0;
@@ -241,6 +273,12 @@ void displayText(char* text) {
       writing[128 + m] = bot_6x14[text[i] - 32][k];
       m++;
     }
+  }
+
+  for (int i = 0; i < 128 - (m % 128); i++) {
+    writing[m] = 0x00;
+    writing[128 + m] = 0x00;
+    m++;
   }
 
 

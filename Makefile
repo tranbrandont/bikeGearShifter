@@ -16,12 +16,16 @@ irq.o :
 	gcc-arm -mcpu=Cortex-m0 -c irq.s
 blinky: irq.o blinky.o thread.o libos.a
 	ld-arm -o blinky -T lpc1114.ld blinky.o thread.o irq.o libos.a
+hall.o:
+	gcc-arm -mcpu=Cortex-m0 -c -g hall.c
+speeds.o: speeds.h
+	gcc-arm -mcpu=Cortex-m0 -c -g speeds.c
 ssd1306.o:
 	gcc-arm -mcpu=Cortex-m0 -c -g ssd1306.c
 font.o:
 	gcc-arm -mcpu=Cortex-m0 -c -g font.c
-lcd: irq.o ssd1306.o thread.o libos.a font.o
-	ld-arm -o lcd -T lpc1114.ld ssd1306.o thread.o irq.o libos.a font.o
+lcd: irq.o ssd1306.o thread.o libos.a font.o speeds.o hall.o
+	ld-arm -o lcd -T lpc1114.ld ssd1306.o thread.o irq.o libos.a font.o speeds.o hall.o
 upload: lcd
 	openocd -f interface/stlink-v2.cfg -f target/lpc11xx.cfg -c'program lcd verify reset exit'
 debug:

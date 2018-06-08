@@ -361,6 +361,7 @@ struct {
     VU IS;
     VU IBE;
     VU IEV;
+    VU IE;
     VU RIS;
     VU MIS;
     VU IC;
@@ -417,3 +418,5 @@ extern struct {
   volatile       unsigned MASK2;
   volatile       unsigned MASK3;
 } I2C0;
+
+extern void hallsetup();

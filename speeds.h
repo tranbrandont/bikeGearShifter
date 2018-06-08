@@ -1,7 +1,7 @@
 typedef struct {
     char front;
     char back;
-    char[3] name;
+    char name[3];
 } speed;
 
-speed[18] speeds;
+speed speeds[18];
