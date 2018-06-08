@@ -42,12 +42,11 @@ void setup () {
 
 //read the switch on GPIO1_6,make it an input pin.
   GPIO1.DIR &= ~(1 << 6);
+  GPIO1.IS &= ~(1<<6);
+  GPIO1.IEV &= ~(1<<6);
   GPIO1.IE = 1<<6;
-
-  //GPIO1.IS &= ~(1<<6);
   //GPIO1.IBE |= (1<<6);
-  //GPIO1.IEV &= ~(1<<6);
-  IOCON.PIO0_6.MODE = 0x2;
+  IOCON.PIO1_6.MODE = 0x2;
 
 
 //make PIO0 1, 2, 3, and 7 output
@@ -92,8 +91,8 @@ void IRQ17() {
 }
 
 void IRQ30() {
-  GPIO0.DATA[1<<1] = 1<<1;
-
+  GPIO0.DATA[1<<1] ^= ~0;
+  GPIO1.IC = (1<<6);
 }
 
 void servosetup() {
