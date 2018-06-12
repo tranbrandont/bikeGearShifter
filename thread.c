@@ -39,9 +39,9 @@ void schedule(){
     }
 }
 
-void SysTick(){
-    schedule();
-}
+// void SysTick(){
+//     schedule();
+// }
 
 __attribute__((constructor)) void thd_ctor(){
     thread_t** thds = &__THREADS;

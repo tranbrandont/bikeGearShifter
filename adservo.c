@@ -1,5 +1,4 @@
 #include "lpc1114.h"
-volatile unsigned* _GPIO1ALL = (unsigned*) 0x50013ffc;
 void setup() {
   SYSCON.SYSAHBCLKCTRL.CT16B1 = 1;
   SYSCON.SYSAHBCLKCTRL.IOCON  = 1;

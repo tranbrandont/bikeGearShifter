@@ -16,8 +16,12 @@ PROVIDE(__VECTOR_CHECKSUM = 0
                           - (NMI + 1)
                           - (HardFault + 1));
 
+PROVIDE(I2C0     = 0x40000000);
 PROVIDE(TMR16B0  = 0x4000C000);
 PROVIDE(TMR16B1  = 0x40010000);
+PROVIDE(TMR32B0  = 0x40014000);
+PROVIDE(TMR32B1  = 0x40018000);
+PROVIDE(AD0      = 0x4001C000);
 PROVIDE(IOCON    = 0x40044000);
 PROVIDE(SYSCON   = 0x40048000);
 PROVIDE(GPIO0    = 0x50000000);
@@ -43,7 +47,7 @@ SECTIONS {
      *(.init_array);
   } > flash
 
-  
+
   .rodata : {
      . = ALIGN(4);
      *(.rodata);
@@ -59,7 +63,7 @@ SECTIONS {
   } > sram AT > flash
 
   .bss : {
-     . = ALIGN(4);  
+     . = ALIGN(4);
      *(.bss);
   } > sram
 
