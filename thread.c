@@ -8,6 +8,7 @@ THREAD(__main__, reset, 64, 0, 0, 0, 0);
 char* const __PSP = ((char*)&__main__)+(sizeof(__main__));
 
 /* Current Running Thread */
+
 thread_t* runlist = 0;
 thread_t* runlist_tail = 0;
 thread_t* CURCTX= (thread_t*)(&__main__);
@@ -39,6 +40,7 @@ void schedule(){
     }
 }
 
+////This is important if we actually use the scheduler, which we aren't using here
 // void SysTick(){
 //     schedule();
 // }

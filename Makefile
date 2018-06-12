@@ -24,10 +24,14 @@ ssd1306.o:
 	gcc-arm -mcpu=Cortex-m0 -c -g ssd1306.c
 font.o:
 	gcc-arm -mcpu=Cortex-m0 -c -g font.c
-lcd: irq.o ssd1306.o thread.o libos.a font.o speeds.o hall.o
-	ld-arm -o lcd -T lpc1114.ld ssd1306.o thread.o irq.o libos.a font.o speeds.o hall.o
-upload: lcd
-	openocd -f interface/stlink-v2.cfg -f target/lpc11xx.cfg -c'program lcd verify reset exit'
+servo.o:
+	gcc-arm -mcpu=Cortex-m0 -c -g servo.c servo.h
+stepper.o:
+	gcc-arm -mcpu=Cortex-m0 -c -g stepper.c stepper.h 
+bike: irq.o ssd1306.o thread.o libos.a font.o speeds.o hall.o stepper.o servo.o
+	ld-arm -o bike -T lpc1114.ld ssd1306.o thread.o irq.o libos.a font.o speeds.o hall.o stepper.o servo.o
+upload: bike
+	openocd -f interface/stlink-v2.cfg -f target/lpc11xx.cfg -c'program bike verify reset exit'
 debug:
 	openocd -f interface/stlink-v2.cfg -f target/lpc11xx.cfg -c'gdb_port 3333; gdb_memory_map disable'&
 clean:

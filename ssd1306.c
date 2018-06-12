@@ -1,4 +1,5 @@
 #include "lpc1114.h"
+#include "ssd1306.h"
 
 #define AA   (1<<2)
 #define SI   (1<<3)
@@ -9,15 +10,8 @@
 extern char bot_6x14[][6];
 extern char top_6x14[][6];
 
-int currMotor = 7;
 
-void clearScreen();
-void displayText();
-void hallsetup();
-void servosetup();
-
-void setup () {
-
+__attribute__((constructor)) void setup () {
 //turn on clock
   SYSCON.SYSAHBCLKCTRL.CT32B0 = 1;
   SYSCON.SYSAHBCLKCTRL.GPIO=1;
@@ -39,125 +33,13 @@ void setup () {
   ISER |= (1<<15) | (1<<17) | (1<<24) | (1<<30);
 
   I2C0.CONSET = STA;
-
-//read the switch on GPIO1_6,make it an input pin.
-  GPIO1.DIR &= ~(1 << 6);
-  GPIO1.IS &= ~(1<<6);
-  GPIO1.IEV &= ~(1<<6);
-  GPIO1.IE = 1<<6;
-  //GPIO1.IBE |= (1<<6);
-  IOCON.PIO1_6.MODE = 0x2;
-
-
-//make PIO0 1, 2, 3, and 7 output
-  GPIO0.DIR |= (1<<1)|(1<<2)|(1<<3)|(1<<7);
-  GPIO0.DATA[1<<1] = 0;
-  GPIO0.DATA[1<<2] = 0;
-  GPIO0.DATA[1<<3] = 0;
-  GPIO0.DATA[1<<7] = 0;
-
-//5 ms timer
-  TMR32B0.PR = 48;
-  TMR32B0.MR0 = 1000;
-  TMR32B0.MR1 = 5000;
-
-  TMR32B0.MCR.MR0I = 1;
-  TMR32B0.MCR.MR1I = 1;
-  TMR32B0.MCR.MR1R = 0;
-
-  TMR32B0.TC = 0;
-  TMR32B0.PC = 0;
-
-
-  for(int i = 0; i< 1000000; i++){}
-
-  displayText("look");
-
-  for(int i = 0; i< 1000000; i++){}
-  displayText("test");
-
-  hallsetup();
-  servosetup();
-
-  // for(int i = 0; i < 200000; i++) {
-  //   stepUp();
-  //   stepBack();
-  //   for(int i = 0; i < 200000; i++) {}
-  // }
 }
 
 void IRQ17() {
   TMR16B1.MR0 = TMR16B1.MR3 - (1000);
 }
 
-void IRQ30() {
-  GPIO0.DATA[1<<1] ^= ~0;
-  GPIO1.IC = (1<<6);
-}
 
-void servosetup() {
-  SYSCON.SYSAHBCLKCTRL.CT16B1 = 1;
-  SYSCON.SYSAHBCLKCTRL.IOCON  = 1;
-  IOCON.PIO1_9.FUNC = 1;
-  SYSCON.SYSAHBCLKCTRL.IOCON = 0;
-
-  TMR16B1.PR          = 48;
-  TMR16B1.MR3         = 20000;
-  TMR16B1.MR0         = 18500;
-  TMR16B1.MR1         = 20000;
-  TMR16B1.MCR.MR1I    = 1;
-
-  TMR16B1.MCR.MR3R    = 1;
-  TMR16B1.PWMC.PWMEN0 = 1;
-
-  TMR16B1.TC      = 0;
-  TMR16B1.PC      = 0;
-
-  TMR16B1.TCR.CEn = 1;
-}
-
-//steps the motor A-> B -> !A -> !B
-void stepUp() {
-  for(int i = 0; i < 200; i++) {
-
-    switch (currMotor) {
-      case 1: currMotor = 3;
-        break;
-      case 2: currMotor = 7;
-        break;
-      case 3: currMotor = 2;
-        break;
-      case 7: currMotor = 1;
-        break;
-    }
-    GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    for(int i = 0; i < 100000; i++) {}
-    GPIO0.DATA[1<<currMotor] = 0;
-    GPIO0.DATA[1<<currMotor] = 0;
-  }
-}
-
-//steps A!-> B -> A -> B!
-void stepBack() {
-
-
-  for(int i = 0; i < 200; i++) {
-    switch (currMotor) {
-      case 1: currMotor = 7;
-        break;
-      case 2: currMotor = 3;
-        break;
-      case 3: currMotor = 1;
-        break;
-      case 7: currMotor = 2;
-        break;
-    }
-    GPIO0.DATA[1<<currMotor] = 1<<currMotor;
-    for(int i = 0; i < 100000; i++) {}
-    GPIO0.DATA[1<<currMotor] = 0;
-
-  }
-}
 
 /*
  *                                            STO           DATA
@@ -300,8 +182,6 @@ void clearScreen() {
 
 
 void IRQ15() {
-
-
   switch(I2C0.STAT>>3) {
   case 1: /* START condition has been transmitted. */
   case 2: /* Repeated START condition has been transmitted. */

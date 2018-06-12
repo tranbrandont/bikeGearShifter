@@ -419,4 +419,3 @@ extern struct {
   volatile       unsigned MASK3;
 } I2C0;
 
-extern void hallsetup();
