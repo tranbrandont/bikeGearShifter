@@ -1,5 +1,6 @@
 #include "lpc1114.h"
 #include "stepper.h"
+#include "ssd1306.h"
 int currMotor = 7;
 //state machine
 int pendingsteps = 0;
@@ -8,6 +9,8 @@ int on = 0;
 __attribute__((constructor)) void setUpStepper(){
     //read the switch on GPIO1_6,make it an input pin.
     SYSCON.SYSAHBCLKCTRL.CT32B0 = 1;
+    SYSCON.SYSAHBCLKCTRL.IOCON = 1;
+    SYSCON.SYSAHBCLKCTRL.IOCON = 0;
     GPIO1.DIR &= ~(1 << 6);
     GPIO1.IS &= ~(1<<6);
     GPIO1.IEV &= ~(1<<6);
@@ -30,28 +33,32 @@ __attribute__((constructor)) void setUpStepper(){
 
     TMR32B0.MCR.MR0I = 1;
     TMR32B0.MCR.MR1I = 1;
-    TMR32B0.MCR.MR1R = 0;
+    TMR32B0.MCR.MR1R = 1;
+//    TMR32B0.MCR.MR2R = 1;
 
     TMR32B0.TC = 0;
     TMR32B0.PC = 0;
+    ISER |= (1<<18);
 }
 
 //steps the motor A-> B -> !A -> !B
 void stepUp(int nsteps) {
     isReverse = 0;
-    pendingsteps = nsteps;
+    pendingsteps = 4 * nsteps;
     on = 1;
+    TMR32B0.TC = 0;
+    TMR32B0.PC = 0;
     TMR32B0.TCR.CEn = 1;
-    while (pendingsteps);
 }
 
 //steps A!-> B -> A -> B!
 void stepBack(int nsteps) {
-    pendingsteps = nsteps;
+    pendingsteps = 4* nsteps;
     isReverse = 1;
     on = 1;
+    TMR32B0.TC = 0;
+    TMR32B0.PC = 0;
     TMR32B0.TCR.CEn = 1;
-    while (pendingsteps);
 }
 void step(int nsteps){
     if (nsteps < 0){
@@ -63,15 +70,19 @@ void step(int nsteps){
 }
 
 void switchPressed(){
+    displayText("pressed");   
     GPIO0.DATA[1<<1] ^= ~0;
     GPIO1.IC = (1<<6);
 }
 
+//fires on TMR32B0 interrupt
 void IRQ18(){
-   // GPIO0.DATA[1<<currMotor] ^= (1<<currMotor);
+    // GPIO0.DATA[1<<currMotor] ^= (1<<currMotor);
     if (on){
         GPIO0.DATA[1<<currMotor] = (1<<currMotor);
         on = 0;
+ //       TMR32B0.IR.MR0INT = 1;
+        TMR32B0.IR.MR1INT = 1;
     }
     else{
         GPIO0.DATA[1<<currMotor] = 0;
@@ -86,6 +97,7 @@ void IRQ18(){
                 case 7: currMotor = 2;
                         break;
             } 
+
         }else{
             switch (currMotor) {
                 case 1: currMotor = 3;
@@ -96,12 +108,16 @@ void IRQ18(){
                         break;
                 case 7: currMotor = 1;
                         break;
-            }    }
+            }
+        }
         on = 1;
         pendingsteps--;
-        if (pendingsteps == 0){
+        if (pendingsteps <= 0){
             TMR32B0.TCR.CEn = 0;
+            SYST.CSR.ENABLE = 1;
         }
+        TMR32B0.IR.MR0INT = 1;
+        TMR32B0.IR.MR1INT = 1;
     }
 }
 void IRQ30() {

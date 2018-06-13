@@ -13,8 +13,8 @@ char currsample = 0;
 const int ADC_LOW_THRESH = 200;
 const int ADC_HI_THRESH = 700;
 
-const int SHIFT_DOWN_THRESH = 75;
-const int SHIFT_UP_THRESH = 150;
+const int SHIFT_DOWN_THRESH = 225;
+const int SHIFT_UP_THRESH = 450;
 
 enum State{
     HI,
@@ -75,10 +75,11 @@ void handlesample(){
             for (int i = 0; i < 12; i++){
                 history[i] = 0;
             }
-            displayText("Step back");
-            stepBack(200);
+            displayText("Step up");
+            for (int i = 0; i < 100000; i++){}
+
+            stepUp(200);
             currsample = 0;
-            SYST.CSR.ENABLE = 1;
             return;
         }
         if  (centisec_timer - oldest < SHIFT_DOWN_THRESH){
@@ -87,10 +88,10 @@ void handlesample(){
             for (int i = 0; i < 12; i++){
                 history[i] = 0;
             }
-            displayText("Step up");
-            stepUp(200);
+            displayText("Step back");
+            for (int i = 0; i < 100000; i++){}
+            stepBack(200);
             currsample = 0;
-            SYST.CSR.ENABLE = 1;
             return;
         }
     }

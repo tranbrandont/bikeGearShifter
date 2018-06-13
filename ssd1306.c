@@ -30,7 +30,8 @@ __attribute__((constructor)) void setup () {
   I2C0.SCLL = 240;
   I2C0.CONSET = I2EN;
 
-  ISER |= (1<<15) | (1<<17) | (1<<24) | (1<<30);
+  //ISER |= (1<<15) | (1<<17) | (1<<24) | (1<<30);
+  ISER |= (1<<15)  | (1<<24) | (1<<30);
 
   I2C0.CONSET = STA;
 }
