@@ -20,3 +20,16 @@ __attribute__((constructor)) void servosetup() {
 
   TMR16B1.TCR.CEn = 1;
 }
+
+//since the servo on the bike itself is broken, these are just fudged vals
+void setservopos(int pos){
+    if (pos == 0){
+        TMR16B1.MR0 = 19500;
+    }
+    else if (pos == 1){
+        TMR16B1.MR0 = 18500;
+    }
+    else{
+        TMR16B1.MR0 = 17500;
+    }
+}

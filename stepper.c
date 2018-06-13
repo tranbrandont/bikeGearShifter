@@ -69,6 +69,12 @@ void step(int nsteps){
     }
 }
 
+//home to stepper 0-position
+void home(){
+
+    return; //placeholder
+}
+
 void switchPressed(){
     displayText("pressed");   
     GPIO0.DATA[1<<1] ^= ~0;

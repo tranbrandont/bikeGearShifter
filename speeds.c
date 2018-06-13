@@ -1,5 +1,7 @@
 #include "speeds.h"
-
+#include "servo.h"
+#include "stepper.h"
+int currspeed = 9;
 //names must be 
 void init_speed(speed* s, char front, char back, char* name){
     s->front = front;
@@ -10,7 +12,7 @@ void init_speed(speed* s, char front, char back, char* name){
 }
 
 //initialize speeds in an order based on gear ratio
-void init_speeds(){
+__attribute__((constructor)) void init_speeds(){
 /*[[[cog
 def speedname(i):
     out = str(i)
@@ -53,4 +55,29 @@ init_speed(&(speeds[15]), 1, 0, "15"); //ratio=2.7142857142857144
 init_speed(&(speeds[16]), 2, 1, "16"); //ratio=3.0
 init_speed(&(speeds[17]), 2, 0, "17"); //ratio=3.4285714285714284
 //[[[end]]]
+
+//Home both servo and stepper to 0 positions
+    home();
+    setservopos(0);
+    displayText(speeds[9].name);
+}
+
+void setspeed(int speedindex){
+    if (speedindex < 0 || speedindex > 17){
+        return;
+    }
+    displayText(speeds[speedindex].name);
+    for (int i = 0; i < 100000; i++){} //waste some time while screen sets
+    int delta = speeds[speedindex].back - speeds[currspeed].back;
+    step(200 * delta);
+    setservopos(speeds[speedindex].front);
+    currspeed = speedindex;
+}
+
+void shiftHarder(){
+    setspeed(currspeed + 1);
+}
+
+void shiftEasier(){
+    setspeed(currspeed - 1);
 }

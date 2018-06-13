@@ -5,3 +5,7 @@ typedef struct {
 } speed;
 
 speed speeds[18];
+ 
+void setspeed(int speedindex);
+void shiftHarder();
+void shiftEasier();

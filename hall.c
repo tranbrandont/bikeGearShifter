@@ -13,8 +13,8 @@ char currsample = 0;
 const int ADC_LOW_THRESH = 200;
 const int ADC_HI_THRESH = 700;
 
-const int SHIFT_DOWN_THRESH = 225;
-const int SHIFT_UP_THRESH = 450;
+const int SHIFT_UP_THRSH = 225;
+const int SHIFT_DOWN_THRSH = 450;
 
 enum State{
     HI,
@@ -68,29 +68,26 @@ void handlesample(){
             //haven't gotten 12 samples yet. Don't shift yet
             return;
         }
-        if (centisec_timer - oldest > SHIFT_UP_THRESH){
+        if (centisec_timer - oldest > SHIFT_DOWN_THRSH){
+            //cadence too slow 
             //disable SysTick (re-enabled at the end)
             SYST.CSR.ENABLE = 0;
             //wipe history (so we don't shift too quickly)
             for (int i = 0; i < 12; i++){
                 history[i] = 0;
             }
-            displayText("Step up");
-            for (int i = 0; i < 100000; i++){}
-
-            stepUp(200);
+            shiftEasier();
             currsample = 0;
             return;
         }
-        if  (centisec_timer - oldest < SHIFT_DOWN_THRESH){
+        if  (centisec_timer - oldest < SHIFT_UP_THRSH){
+        //cadence too fast
             //wipe history
             SYST.CSR.ENABLE = 0;
             for (int i = 0; i < 12; i++){
                 history[i] = 0;
             }
-            displayText("Step back");
-            for (int i = 0; i < 100000; i++){}
-            stepBack(200);
+            shiftHarder();
             currsample = 0;
             return;
         }
