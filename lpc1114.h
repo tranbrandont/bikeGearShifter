@@ -368,10 +368,14 @@ struct {
 } extern GPIO0, GPIO1;
 
 extern struct {
-  VU IR;
-  VU TCR;
-  VU TC;
-  VU PR;
+    VU IR;
+    struct {
+        VU CEn  : 1;
+        VU CRst : 1;
+        RES     : 30;
+    } TCR;
+    VU TC;
+    VU PR;
   VU PC;
   struct {
     VU MR0I : 1;
