@@ -19,6 +19,8 @@ __attribute__((constructor)) void servosetup() {
   TMR16B1.PC      = 0;
 
   TMR16B1.TCR.CEn = 1;
+
+
 }
 
 //since the servo on the bike itself is broken, these are just fudged vals

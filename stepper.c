@@ -6,16 +6,13 @@ int currMotor = 7;
 int pendingsteps = 0;
 int isReverse = 0;
 int on = 0;
+int switchOn = 0;
 __attribute__((constructor)) void setUpStepper(){
     //read the switch on GPIO1_6,make it an input pin.
     SYSCON.SYSAHBCLKCTRL.CT32B0 = 1;
     SYSCON.SYSAHBCLKCTRL.IOCON = 1;
     SYSCON.SYSAHBCLKCTRL.IOCON = 0;
     GPIO1.DIR &= ~(1 << 6);
-    GPIO1.IS &= ~(1<<6);
-    GPIO1.IEV &= ~(1<<6);
-    GPIO1.IE = 1<<6;
-    //GPIO1.IBE |= (1<<6);
     IOCON.PIO1_6.MODE = 0x2;
 
 
@@ -39,6 +36,7 @@ __attribute__((constructor)) void setUpStepper(){
     TMR32B0.TC = 0;
     TMR32B0.PC = 0;
     ISER |= (1<<18);
+
 }
 
 //steps the motor A-> B -> !A -> !B
@@ -71,12 +69,13 @@ void step(int nsteps){
 
 //home to stepper 0-position
 void home(){
-
+    for (int i = 0; i < 100000; i++){}
+    stepBack(-1);
     return; //placeholder
 }
 
 void switchPressed(){
-    displayText("pressed");   
+    displayText("pressed");
     GPIO0.DATA[1<<1] ^= ~0;
     GPIO1.IC = (1<<6);
 }
@@ -84,46 +83,59 @@ void switchPressed(){
 //fires on TMR32B0 interrupt
 void IRQ18(){
     // GPIO0.DATA[1<<currMotor] ^= (1<<currMotor);
-    if (on){
-        GPIO0.DATA[1<<currMotor] = (1<<currMotor);
-        on = 0;
- //       TMR32B0.IR.MR0INT = 1;
-        TMR32B0.IR.MR1INT = 1;
+    if (GPIO1.DATA[1<<6] == 0 && switchOn == 0) {
+      GPIO0.DATA[1<<1] = 0;
+      GPIO0.DATA[1<<2] = 0;
+      GPIO0.DATA[1<<3] = 0;
+      GPIO0.DATA[1<<7] = 0;
+      switchOn = 1;
+      isReverse = 0;
+      pendingsteps = 800;
+      //stepUp(200);
     }
-    else{
-        GPIO0.DATA[1<<currMotor] = 0;
-        if (isReverse){
-            switch (currMotor) {
-                case 1: currMotor = 7;
-                        break;
-                case 2: currMotor = 3;
-                        break;
-                case 3: currMotor = 1;
-                        break;
-                case 7: currMotor = 2;
-                        break;
-            } 
+    else {
+        if (on){
+            GPIO0.DATA[1<<currMotor] = (1<<currMotor);
+            on = 0;
+     //       TMR32B0.IR.MR0INT = 1;
+            TMR32B0.IR.MR1INT = 1;
+        }
+        else{
+            GPIO0.DATA[1<<currMotor] = 0;
+            if (isReverse){
+                switch (currMotor) {
+                    case 1: currMotor = 7;
+                            break;
+                    case 2: currMotor = 3;
+                            break;
+                    case 3: currMotor = 1;
+                            break;
+                    case 7: currMotor = 2;
+                            break;
+                }
 
-        }else{
-            switch (currMotor) {
-                case 1: currMotor = 3;
-                        break;
-                case 2: currMotor = 7;
-                        break;
-                case 3: currMotor = 2;
-                        break;
-                case 7: currMotor = 1;
-                        break;
+            }else{
+                switch (currMotor) {
+                    case 1: currMotor = 3;
+                            break;
+                    case 2: currMotor = 7;
+                            break;
+                    case 3: currMotor = 2;
+                            break;
+                    case 7: currMotor = 1;
+                            break;
+                }
             }
+            on = 1;
+            pendingsteps--;
+            if (pendingsteps <= 0){
+                TMR32B0.TCR.CEn = 0;
+                SYST.CSR.ENABLE = 1;
+                switchOn = 0;
+            }
+            TMR32B0.IR.MR0INT = 1;
+            TMR32B0.IR.MR1INT = 1;
         }
-        on = 1;
-        pendingsteps--;
-        if (pendingsteps <= 0){
-            TMR32B0.TCR.CEn = 0;
-            SYST.CSR.ENABLE = 1;
-        }
-        TMR32B0.IR.MR0INT = 1;
-        TMR32B0.IR.MR1INT = 1;
     }
 }
 void IRQ30() {

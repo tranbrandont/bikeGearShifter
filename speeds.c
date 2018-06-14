@@ -1,8 +1,9 @@
+#include "hall.h"
 #include "speeds.h"
 #include "servo.h"
 #include "stepper.h"
 int currspeed = 9;
-//names must be 
+//names must be
 void init_speed(speed* s, char front, char back, char* name){
     s->front = front;
     s->back = back;
@@ -57,9 +58,6 @@ init_speed(&(speeds[17]), 2, 0, "17"); //ratio=3.4285714285714284
 //[[[end]]]
 
 //Home both servo and stepper to 0 positions
-    home();
-    setservopos(0);
-    displayText(speeds[9].name);
 }
 
 void setspeed(int speedindex){

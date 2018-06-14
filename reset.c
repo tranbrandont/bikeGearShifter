@@ -1,6 +1,8 @@
 #include "lpc1114.h"
 #include "thread.h"
-
+#include "hall.h"
+#include "servo.h"
+#include "stepper.h"
 
 void setup() __attribute__((weak));
 void loop()  __attribute__((weak));
@@ -21,6 +23,12 @@ void reset() {
   SYSCON.MAINCLKSEL = 0x3;
   SYSCON.MAINCLKUEN = 0;
   SYSCON.MAINCLKUEN = 1;
+  SYST.CSR.ENABLE = 1;
+  
+
+  home();
+  setservopos(0);
+
 
   if(setup) {
     setup();
@@ -34,5 +42,5 @@ void reset() {
     while(1)
       __asm("wfi");
   }
-         
+
 }

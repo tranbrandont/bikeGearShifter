@@ -1,6 +1,7 @@
 #include "lpc1114.h"
 #include "hall.h"
 #include "stepper.h"
+#include "speeds.h"
 
 //if you ride this bike for like 1.5 straight years
 //have the gears change unexpectedly or something
@@ -22,14 +23,12 @@ enum State{
 };
 unsigned state = HI;
 
-
 __attribute__((constructor)) void hallsetup(){
     //set up systick
     SYST.CSR.CLKSOURCE = 1;
     SYST.RVR.RELOAD = 479999; //interrupts every 10ms
     SYST.CVR.CURRENT = 1;
     SYST.CSR.TICKINT = 1;
-    SYST.CSR.ENABLE = 1;
 
     //set up AD0
     SYSCON.SYSAHBCLKCTRL.ADC = 1;
@@ -69,7 +68,7 @@ void handlesample(){
             return;
         }
         if (centisec_timer - oldest > SHIFT_DOWN_THRSH){
-            //cadence too slow 
+            //cadence too slow
             //disable SysTick (re-enabled at the end)
             SYST.CSR.ENABLE = 0;
             //wipe history (so we don't shift too quickly)
